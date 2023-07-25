@@ -26,10 +26,11 @@ class DrogasilspiderSpider(scrapy.Spider):
             yield scrapy.Request(product_url, callback = self.parse_product)
 
         if page == 1:
-
+            # capturando o número de resultados
             total_results =  int(response.xpath(
                 '//*[starts-with(@class, "Found__FoundStyles")]/p/text()'
                 ).get())
+            # encontrando o número de páginas que deverão ser visitadas
             number_pages = ceil(total_results / 48) # 48 itens são exibidos por página por padrão
 
             for page_num in range(2, number_pages):
@@ -39,4 +40,15 @@ class DrogasilspiderSpider(scrapy.Spider):
                                                                                       'page' : page_num})
 
     def parse_product(self, response):
-        pass
+        
+        # table with some core elements 
+        table = response.xpath('//*[starts-with(@class, "ProductAttributestyles__ProductAttributeStyles")]/table')
+        # elements that are in the table
+        sku = table[0].css('td div::text').get()
+        weight = table[2].css('td div::text').get()
+
+        product = response.css('.product-name h1::text').get()
+        brand = response.css('.product-attributes li.brand::text').get()
+        volume = response.css('.product-attributes li.quantity::text').get()
+
+        ## for the price we'll need to create a validation, there are two types of prices
